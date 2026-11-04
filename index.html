@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>翻轉吧！花蓮｜投票日倒數</title>
+<meta name="description" content="11月28日投票日倒數。點亮希望，翻轉花蓮——花蓮縣長候選人 2號 張峻。">
+<meta property="og:title" content="翻轉吧！花蓮｜投票日倒數">
+<meta property="og:description" content="11月28日投票日倒數。每一張選票都是翻轉花蓮的關鍵力量。">
+<meta property="og:image" content="logo.png">
+<link rel="icon" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #13295c;
+    --blue: #1d3d9a;
+    --red: #d1242f;
+    --sky: #bcd2ec;
+    --grey: #5d6470;
+    --paper: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); }
+  body {
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+    color: var(--navy);
+    display: flex; justify-content: center;
+    min-height: 100svh;
+    overflow-x: hidden;
+  }
+
+  /* 整張海報依照寬度等比縮放（cqw = 海報寬度的 1%） */
+  .poster {
+    container-type: inline-size;
+    width: min(100vw, 100svh * 0.52);
+    min-width: 300px;
+    position: relative;
+    overflow: hidden;
+  }
+  .inner {
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 4cqw;
+  }
+
+  .logo { width: 30cqw; height: auto; display: block; }
+
+  h1 {
+    margin-top: 3cqw;
+    font-weight: 900;
+    font-size: 7.6cqw;
+    letter-spacing: .02em;
+    white-space: nowrap;
+  }
+  h1 .date { color: var(--red); }
+  h1 .tail { color: var(--blue); margin-left: 4cqw; }
+
+  /* ---------- 翻頁卡（共用） ---------- */
+  .flip {
+    position: relative;
+    width: var(--w); height: var(--h);
+    perspective: calc(var(--h) * 4);
+    font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900;
+    color: var(--navy);
+    border-radius: var(--r);
+  }
+  .half {
+    position: absolute; left: 0; right: 0;
+    height: 50%;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .half span {
+    position: absolute; left: 0; right: 0;
+    height: var(--h); line-height: var(--h);
+    text-align: center;
+    font-size: var(--fs);
+    letter-spacing: -0.03em;
+  }
+  .top {
+    top: 0;
+    border-radius: var(--r) var(--r) 0 0;
+    background: linear-gradient(#ffffff, #f2f3f6);
+  }
+  .top span { top: 0; }
+  .bottom {
+    top: 50%;
+    border-radius: 0 0 var(--r) var(--r);
+    background: linear-gradient(#f4f5f8, #ffffff);
+  }
+  .bottom span, .leaf .back span { top: calc(var(--h) / -2); }
+
+  .leaf {
+    position: absolute; left: 0; right: 0; top: 0;
+    height: 50%;
+    transform-origin: 50% 100%;
+    transform-style: preserve-3d;
+    z-index: 3;
+    visibility: hidden;
+  }
+  .leaf .half { top: 0; height: 100%; }
+  .leaf .front { border-radius: var(--r) var(--r) 0 0; background: linear-gradient(#ffffff, #f2f3f6); }
+  .leaf .back  { border-radius: 0 0 var(--r) var(--r); background: linear-gradient(#f4f5f8, #ffffff); transform: rotateX(180deg); }
+  .flip.flipping .leaf { visibility: visible; animation: flip .65s cubic-bezier(.45,.05,.4,1) forwards; }
+  .flip.flipping .leaf .front { animation: shade .65s forwards; }
+  @keyframes flip  { to { transform: rotateX(-180deg); } }
+  @keyframes shade { to { filter: brightness(.82); } }
+
+  /* 外框、中線、轉軸 */
+  .frame {
+    position: relative;
+    padding: var(--pad);
+    border-radius: calc(var(--r) * 1.5);
+    background: linear-gradient(160deg, #f7f9fc, #dfe4ec 55%, #f3f5f9);
+    box-shadow:
+      inset 0 0 0 1px #c9d0dc,
+      0 0 0 calc(var(--pad) * .18) #a9b6cc,
+      0 calc(var(--pad) * .5) calc(var(--pad) * 1.2) rgba(19, 41, 92, .18);
+  }
+  .frame .flip { box-shadow: 0 0 0 1px #d4d9e2, inset 0 1px 0 #fff; }
+  .frame::after {           /* 中間黑線 */
+    content: ""; position: absolute; z-index: 6;
+    left: 0; right: 0; top: 50%;
+    height: var(--line); transform: translateY(-50%);
+    background: #15171c;
+  }
+  .pin {
+    position: absolute; z-index: 7; top: 50%;
+    width: var(--pin-w); height: var(--pin-h);
+    transform: translateY(-50%);
+    border-radius: calc(var(--pin-w) * .35);
+    background: linear-gradient(90deg, #2f3540, #7d8796 45%, #2f3540);
+    box-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .pin.l { left: calc(var(--pin-w) * -.25); }
+  .pin.r { right: calc(var(--pin-w) * -.25); }
+
+  /* 大卡：天數 */
+  .big {
+    --w: 78cqw; --h: 66cqw; --fs: 52cqw; --r: 4cqw;
+    --pad: 3cqw; --line: .55cqw; --pin-w: 2.6cqw; --pin-h: 8cqw;
+    margin-top: 4cqw;
+  }
+  .big .flip.three { --fs: 40cqw; }
+  .big .unit-label {
+    position: absolute; z-index: 8;
+    right: 15cqw; bottom: 3.5cqw;
+    font-size: 7.5cqw; font-weight: 900; color: var(--navy);
+  }
+
+  /* 小卡：時分秒 */
+  .hms {
+    margin-top: 7cqw;
+    display: flex; align-items: center; gap: 2.2cqw;
+  }
+  .hms .frame {
+    --w: 16.5cqw; --h: 13.5cqw; --fs: 10.5cqw; --r: 1.6cqw;
+    --pad: .9cqw; --line: .3cqw; --pin-w: .9cqw; --pin-h: 3cqw;
+  }
+  .hms .flip { font-weight: 700; }
+  .hms .lbl { font-size: 7.6cqw; font-weight: 900; color: var(--blue); margin-right: 1.4cqw; }
+  .hms .lbl:last-child { margin-right: 0; }
+
+  /* 候選人 */
+  .cand {
+    margin-top: 6cqw;
+    width: 88cqw;
+    display: flex; justify-content: center; align-items: center; gap: 4cqw;
+    white-space: nowrap;
+  }
+  .slogan { font-size: 7.6cqw; font-weight: 900; line-height: 1.25; color: var(--blue); }
+  .num {
+    width: 18.5cqw; aspect-ratio: 1;
+    border: 1.3cqw solid var(--red); border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--red);
+    font-family: "Roboto", Arial, sans-serif; font-weight: 700;
+    font-size: 13cqw; line-height: 1;
+  }
+  .who { display: flex; flex-direction: column; align-items: flex-start; }
+  .who small { font-size: 3.5cqw; font-weight: 700; color: var(--grey); letter-spacing: .05em; }
+  .who strong { font-size: 14cqw; font-weight: 900; line-height: 1.15; color: var(--blue); letter-spacing: .02em; }
+
+  /* 底部浮水印 + 標語 */
+  .foot {
+    position: relative;
+    width: 100%;
+    margin-top: 2cqw;
+    height: 22cqw;
+  }
+  .foot .wm {
+    position: absolute; left: 50%; bottom: -5.5cqw;
+    transform: translateX(-50%);
+    font-family: "Roboto", Arial, sans-serif; font-weight: 900;
+    font-size: 25cqw; line-height: 1;
+    color: var(--sky);
+    letter-spacing: -.01em;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .foot p {
+    position: absolute; left: 0; right: 0; top: 6cqw;
+    text-align: center;
+    font-size: 4.6cqw; font-weight: 700; color: #111;
+    letter-spacing: .14em;
+  }
+
+  .done h1 .date { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .5; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip.flipping .leaf { animation: none; visibility: hidden; }
+  }
+</style>
+</head>
+<body>
+<main class="poster">
+  <div class="inner">
+    <img class="logo" src="logo.png" alt="翻轉吧！花蓮 LET'S FLIP!">
+
+    <h1 id="headline"><span class="date">11月28日投票日</span><span class="tail">倒數</span></h1>
+
+    <div class="frame big">
+      <div class="flip" id="d"></div>
+      <span class="pin l"></span><span class="pin r"></span>
+      <span class="unit-label">天</span>
+    </div>
+
+    <div class="hms">
+      <div class="frame"><div class="flip" id="h"></div><span class="pin l"></span><span class="pin r"></span></div>
+      <span class="lbl">時</span>
+      <div class="frame"><div class="flip" id="m"></div><span class="pin l"></span><span class="pin r"></span></div>
+      <span class="lbl">分</span>
+      <div class="frame"><div class="flip" id="s"></div><span class="pin l"></span><span class="pin r"></span></div>
+      <span class="lbl">秒</span>
+    </div>
+
+    <div class="cand">
+      <div class="slogan">點亮希望<br>翻轉花蓮</div>
+      <div class="num">2</div>
+      <div class="who"><small>花蓮縣長候選人</small><strong>張峻</strong></div>
+    </div>
+
+    <div class="foot">
+      <div class="wm" aria-hidden="true">HUALIEN</div>
+      <p id="tagline">每一張選票都是翻轉花蓮的關鍵力量</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ===== 設定：倒數目標（台灣時間）=====
+  const TARGET = new Date("2026-11-28T00:00:00+08:00");
+  // =====================================
+
+  function build(el) {
+    el.innerHTML =
+      '<div class="half top"><span></span></div>' +
+      '<div class="half bottom"><span></span></div>' +
+      '<div class="leaf"><div class="half front"><span></span></div><div class="half back"><span></span></div></div>';
+    el.dataset.value = "";
+  }
+
+  function setFlip(el, val, animate) {
+    if (el.dataset.value === val) return;
+    const old = el.dataset.value;
+    const [top, bottom, leaf] = el.children;
+    const [front, back] = leaf.children;
+    el.dataset.value = val;
+    if (!animate) {
+      top.firstChild.textContent = bottom.firstChild.textContent = val;
+      return;
+    }
+    top.firstChild.textContent = val;      // 後方：新數字上半
+    bottom.firstChild.textContent = old;   // 下方先保留舊數字
+    front.firstChild.textContent = old;    // 翻頁正面：舊數字上半
+    back.firstChild.textContent = val;     // 翻頁背面：新數字下半
+    el.classList.remove("flipping");
+    void el.offsetWidth;
+    el.classList.add("flipping");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => {
+      bottom.firstChild.textContent = val;
+      el.classList.remove("flipping");
+    }, 650);
+  }
+
+  const $ = id => document.getElementById(id);
+  const els = { d: $("d"), h: $("h"), m: $("m"), s: $("s") };
+  Object.values(els).forEach(build);
+
+  let first = true, timer;
+  function tick() {
+    const diff = Math.max(0, TARGET - Date.now());
+    const t = Math.floor(diff / 1000);
+    const days = Math.floor(t / 86400);
+    const pad = n => String(n).padStart(2, "0");
+
+    els.d.classList.toggle("three", days >= 100);
+    setFlip(els.d, String(days), !first);
+    setFlip(els.h, pad(Math.floor(t % 86400 / 3600)), !first);
+    setFlip(els.m, pad(Math.floor(t % 3600 / 60)), !first);
+    setFlip(els.s, pad(t % 60), !first);
+    first = false;
+
+    if (diff === 0) {
+      document.body.classList.add("done");
+      const head = document.getElementById("headline");
+      const tag = document.getElementById("tagline");
+      if (Date.now() - TARGET < 86400000) {
+        head.innerHTML = '<span class="date">就是今天！</span><span class="tail">出門投票</span>';
+        tag.textContent = "帶好證件，回戶籍地投下你的一票";
+      } else {
+        head.innerHTML = '<span class="date">謝謝花蓮</span><span class="tail">每一票</span>';
+        tag.textContent = "謝謝每一位出門投票的鄉親";
+      }
+      clearInterval(timer);
+    }
+  }
+
+  tick();
+  timer = setInterval(tick, 1000);
+  document.title = `翻轉吧！花蓮｜投票日倒數 ${Math.ceil(Math.max(0, TARGET - Date.now()) / 86400000)} 天`;
+</script>
+</body>
+</html>
