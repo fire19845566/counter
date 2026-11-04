@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>翻轉吧！花蓮｜勝選日倒數</title>
+<meta name="description" content="11月28日勝選日倒數。點亮希望，翻轉花蓮。">
+<meta property="og:title" content="翻轉吧！花蓮｜勝選日倒數">
+<meta property="og:description" content="每一張選票都是翻轉花蓮的關鍵力量">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #13295c;
+    --blue: #1d3d9a;
+    --red: #d1242f;
+    --sky: #bcd2ec;
+    --ink: #111111;
+    --paper: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--paper); overflow: hidden; }
+  body {
+    font-family: "Noto Sans TC", system-ui, sans-serif;
+    color: var(--navy);
+    display: grid; place-items: center;
+  }
+  body.idle { cursor: none; }
+
+  /* 16:9 舞台：等比縮放塞滿螢幕（1cqw = 舞台寬度的 1%，設計稿 2000px 寬 → 1cqw = 20px） */
+  .stage {
+    container-type: inline-size;
+    position: relative;
+    width: min(100vw, 100vh * 16 / 9);
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  .abs { position: absolute; }
+
+  /* 左側 HUALIEN 直排 */
+  .hualien { left: 2.75cqw; top: 2cqw; width: 9cqw; height: 52.3cqw; }
+  .hualien text {
+    font-family: "Roboto", Arial, sans-serif; font-weight: 900;
+    fill: var(--sky);
+  }
+
+  /* 左欄 */
+  .logo { left: 18cqw; top: 5.6cqw; width: 19cqw; height: auto; }
+  .date { left: 18cqw; top: 23.6cqw; font-size: 4.3cqw; font-weight: 900; color: var(--red); line-height: 1; letter-spacing: .02em; white-space: nowrap; }
+  .win  { left: 17.8cqw; top: 30.6cqw; font-size: 6.1cqw; font-weight: 900; color: var(--red); line-height: 1; letter-spacing: .02em; white-space: nowrap; }
+  .count{ left: 17.2cqw; top: 41.8cqw; font-size: 9.6cqw; font-weight: 900; color: var(--blue); line-height: 1; white-space: nowrap; }
+
+  /* ---------- 翻頁卡（共用） ---------- */
+  .flip {
+    position: relative;
+    width: var(--w); height: var(--h);
+    perspective: calc(var(--h) * 4);
+    font-family: "Roboto", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 900;
+    color: var(--navy);
+    border-radius: var(--r);
+  }
+  .half {
+    position: absolute; left: 0; right: 0;
+    height: 50%;
+    overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .half span {
+    position: absolute; left: 0; right: 0;
+    height: var(--h); line-height: var(--h);
+    text-align: center;
+    font-size: var(--fs);
+    letter-spacing: -0.03em;
+  }
+  .top    { top: 0;   border-radius: var(--r) var(--r) 0 0; background: linear-gradient(#ffffff, #f1f2f5); }
+  .top span { top: 0; }
+  .bottom { top: 50%; border-radius: 0 0 var(--r) var(--r); background: linear-gradient(#f4f5f8, #ffffff); }
+  .bottom span, .leaf .back span { top: calc(var(--h) / -2); }
+
+  .leaf {
+    position: absolute; left: 0; right: 0; top: 0;
+    height: 50%;
+    transform-origin: 50% 100%;
+    transform-style: preserve-3d;
+    z-index: 3;
+    visibility: hidden;
+  }
+  .leaf .half { top: 0; height: 100%; }
+  .leaf .front { border-radius: var(--r) var(--r) 0 0; background: linear-gradient(#ffffff, #f1f2f5); }
+  .leaf .back  { border-radius: 0 0 var(--r) var(--r); background: linear-gradient(#f4f5f8, #ffffff); transform: rotateX(180deg); }
+  .flip.flipping .leaf { visibility: visible; animation: flip .65s cubic-bezier(.45,.05,.4,1) forwards; }
+  .flip.flipping .leaf .front { animation: shade .65s forwards; }
+  @keyframes flip  { to { transform: rotateX(-180deg); } }
+  @keyframes shade { to { filter: brightness(.82); } }
+
+  /* 外框、中線、轉軸 */
+  .frame {
+    padding: var(--pad);
+    border-radius: calc(var(--r) * 1.5);
+    background: linear-gradient(160deg, #f7f9fc, #dfe4ec 55%, #f3f5f9);
+    box-shadow:
+      inset 0 0 0 1px #c9d0dc,
+      0 0 0 calc(var(--pad) * .2) #a9b6cc,
+      0 calc(var(--pad) * .5) calc(var(--pad) * 1.2) rgba(19, 41, 92, .18);
+  }
+  .frame .flip { box-shadow: 0 0 0 1px #d4d9e2, inset 0 1px 0 #fff; }
+  .frame::after {
+    content: ""; position: absolute; z-index: 6;
+    left: 0; right: 0; top: 50%;
+    height: var(--line); transform: translateY(-50%);
+    background: #15171c;
+  }
+  .pin {
+    position: absolute; z-index: 7; top: 50%;
+    width: var(--pin-w); height: var(--pin-h);
+    transform: translateY(-50%);
+    border-radius: calc(var(--pin-w) * .35);
+    background: linear-gradient(90deg, #2f3540, #7d8796 45%, #2f3540);
+    box-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .pin.l { left: calc(var(--pin-w) * -.2); }
+  .pin.r { right: calc(var(--pin-w) * -.2); }
+
+  /* 大卡：天數 */
+  .big {
+    left: 41.9cqw; top: 4.9cqw;
+    --w: 38.6cqw; --h: 33.6cqw; --fs: 25.5cqw; --r: 2cqw;
+    --pad: 1.05cqw; --line: .28cqw; --pin-w: 1.25cqw; --pin-h: 4.2cqw;
+  }
+  .big .flip.three { --fs: 20cqw; }
+  .big .unit-label {
+    position: absolute; z-index: 8;
+    right: 8.2cqw; bottom: 3.9cqw;
+    font-size: 3.9cqw; font-weight: 900; line-height: 1; color: var(--navy);
+  }
+
+  /* 小卡：時分秒 */
+  .hms {
+    left: 41.8cqw; top: 44cqw;
+    display: flex; align-items: center;
+  }
+  .hms .frame {
+    position: relative;
+    --w: 7.7cqw; --h: 6.8cqw; --fs: 5.1cqw; --r: .8cqw;
+    --pad: .35cqw; --line: .16cqw; --pin-w: .45cqw; --pin-h: 1.5cqw;
+  }
+  .hms .flip { font-weight: 700; }
+  .hms .lbl { font-size: 3.6cqw; font-weight: 900; color: var(--blue); line-height: 1; margin: 0 1.1cqw 0 .9cqw; }
+  .hms .lbl:last-child { margin-right: 0; }
+
+  /* 右側直排文字 */
+  .slogan {
+    right: 6.4cqw; top: 2.1cqw;
+    writing-mode: vertical-rl;
+    font-size: 5.9cqw; font-weight: 900; line-height: 1;
+    color: var(--sky);
+    letter-spacing: -.02em;
+    white-space: nowrap;
+  }
+  .tagline {
+    right: 2cqw; top: 2.4cqw;
+    writing-mode: vertical-rl;
+    font-size: 2.85cqw; font-weight: 500; line-height: 1;
+    color: var(--ink);
+    letter-spacing: .4cqw;
+    white-space: nowrap;
+  }
+
+  .done .win { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .5; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flip.flipping .leaf { animation: none; visibility: hidden; }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage" title="點一下可切換全螢幕（或按 F 鍵）">
+
+  <svg class="abs hualien" viewBox="0 0 180 1046" aria-label="HUALIEN">
+    <text x="0" y="0" font-size="252" textLength="1046" lengthAdjust="spacingAndGlyphs"
+          transform="rotate(90)">HUALIEN</text>
+  </svg>
+
+  <img class="abs logo" src="logo.svg" alt="翻轉吧！花蓮 LET'S FLIP!">
+  <div class="abs date">11月28日</div>
+  <div class="abs win" id="win">勝選日</div>
+  <div class="abs count" id="count">倒數</div>
+
+  <div class="abs frame big">
+    <div class="flip" id="d"></div>
+    <span class="pin l"></span><span class="pin r"></span>
+    <span class="unit-label">天</span>
+  </div>
+
+  <div class="abs hms">
+    <div class="frame"><div class="flip" id="h"></div><span class="pin l"></span><span class="pin r"></span></div>
+    <span class="lbl">時</span>
+    <div class="frame"><div class="flip" id="m"></div><span class="pin l"></span><span class="pin r"></span></div>
+    <span class="lbl">分</span>
+    <div class="frame"><div class="flip" id="s"></div><span class="pin l"></span><span class="pin r"></span></div>
+    <span class="lbl">秒</span>
+  </div>
+
+  <div class="abs slogan">點亮希望　翻轉花蓮</div>
+  <div class="abs tagline">每一張選票都是翻轉花蓮的關鍵力量</div>
+</main>
+
+<script>
+  // ===== 設定：倒數目標（台灣時間）=====
+  const TARGET = new Date("2026-11-28T00:00:00+08:00");
+  // =====================================
+
+  const $ = id => document.getElementById(id);
+
+  function build(el) {
+    el.innerHTML =
+      '<div class="half top"><span></span></div>' +
+      '<div class="half bottom"><span></span></div>' +
+      '<div class="leaf"><div class="half front"><span></span></div><div class="half back"><span></span></div></div>';
+    el.dataset.value = "";
+  }
+
+  function setFlip(el, val, animate) {
+    if (el.dataset.value === val) return;
+    const old = el.dataset.value;
+    const [top, bottom, leaf] = el.children;
+    const [front, back] = leaf.children;
+    el.dataset.value = val;
+    if (!animate) {
+      top.firstChild.textContent = bottom.firstChild.textContent = val;
+      return;
+    }
+    top.firstChild.textContent = val;      // 後方：新數字上半
+    bottom.firstChild.textContent = old;   // 下方先保留舊數字
+    front.firstChild.textContent = old;    // 翻頁正面：舊數字上半
+    back.firstChild.textContent = val;     // 翻頁背面：新數字下半
+    el.classList.remove("flipping");
+    void el.offsetWidth;
+    el.classList.add("flipping");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => {
+      bottom.firstChild.textContent = val;
+      el.classList.remove("flipping");
+    }, 650);
+  }
+
+  const els = { d: $("d"), h: $("h"), m: $("m"), s: $("s") };
+  Object.values(els).forEach(build);
+
+  let first = true, timer;
+  function tick() {
+    const diff = Math.max(0, TARGET - Date.now());
+    const t = Math.floor(diff / 1000);
+    const days = Math.floor(t / 86400);
+    const pad = n => String(n).padStart(2, "0");
+
+    els.d.classList.toggle("three", days >= 100);
+    setFlip(els.d, String(days), !first);
+    setFlip(els.h, pad(Math.floor(t % 86400 / 3600)), !first);
+    setFlip(els.m, pad(Math.floor(t % 3600 / 60)), !first);
+    setFlip(els.s, pad(t % 60), !first);
+    first = false;
+
+    if (diff === 0) {
+      document.body.classList.add("done");
+      $("win").textContent = "勝選日";
+      $("count").textContent = Date.now() - TARGET < 86400000 ? "就是今天" : "謝謝花蓮";
+      $("count").style.fontSize = "6.4cqw";
+      $("count").style.top = "43.2cqw";
+      clearInterval(timer);
+    }
+  }
+
+  tick();
+  timer = setInterval(tick, 1000);
+
+  // 電視播放用：點一下或按 F 切換全螢幕；滑鼠閒置 3 秒自動隱藏游標
+  function toggleFS() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.();
+  }
+  document.addEventListener("click", toggleFS);
+  document.addEventListener("keydown", e => { if (e.key === "f" || e.key === "F") toggleFS(); });
+  let idleT;
+  document.addEventListener("mousemove", () => {
+    document.body.classList.remove("idle");
+    clearTimeout(idleT);
+    idleT = setTimeout(() => document.body.classList.add("idle"), 3000);
+  });
+
+  // 長時間播放保險：每 6 小時重新整理一次，避免瀏覽器計時漂移
+  setTimeout(() => location.reload(), 6 * 3600 * 1000);
+</script>
+</body>
+</html>
