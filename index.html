@@ -211,6 +211,11 @@
   .done h1 .date { animation: pulse 1.6s ease-in-out infinite; }
   @keyframes pulse { 50% { opacity: .5; } }
 
+
+  .half span.photo { background: center / cover no-repeat; }
+  .photo-on .unit-label { opacity: 0; transition: opacity .3s; }
+  .photo-on .flip#d { box-shadow: none; }
+
   @media (prefers-reduced-motion: reduce) {
     .flip.flipping .leaf { animation: none; visibility: hidden; }
   }
@@ -254,6 +259,9 @@
 <script>
   // ===== 設定：倒數目標（台灣時間）=====
   const TARGET = new Date("2026-11-28T00:00:00+08:00");
+  // 測試用：網址後面加 ?test=10 就會從 10 秒開始倒數，可以預覽當天效果
+  const TEST_SEC = Number(new URLSearchParams(location.search).get("test"));
+  if (TEST_SEC > 0) TARGET.setTime(Date.now() + TEST_SEC * 1000);
   // =====================================
 
   function build(el) {
@@ -318,7 +326,79 @@
         tag.textContent = "謝謝每一位出門投票的鄉親";
       }
       clearInterval(timer);
+      showPhoto();
     }
+  }
+
+
+  // ===== 投票日當天：天數卡片輪播照片 =====
+  // 把照片放進 repo 的 photos 資料夾即可（檔名不限，依檔名排序播放）
+  const PHOTO_DIRS = ["photos", "photo"];   // 資料夾叫 photos 或 photo 都可以
+  const PHOTO_INTERVAL = 8;        // 每張照片停留秒數
+  const GH_OWNER = "fire19845566", GH_REPO = "counter";
+  const IMG_RE = /\.(jpe?g|png|webp|gif)$/i;
+
+  const loadImg = src => new Promise(r => { const i = new Image(); i.onload = () => r(src); i.onerror = () => r(null); i.src = src; });
+
+  async function listPhotos() {
+    // 1) 透過 GitHub 讀出 photos 資料夾裡的所有照片
+    for (const dir of PHOTO_DIRS) try {
+      const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${dir}`, { signal: AbortSignal.timeout?.(5000) });
+      if (res.ok) {
+        const files = (await res.json())
+          .filter(f => f.type === "file" && IMG_RE.test(f.name))
+          .map(f => f.name)
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+        if (files.length) return files.map(n => `${dir}/${encodeURIComponent(n)}`);
+      }
+    } catch (e) {}
+    // 2) 備援：依序找 photos/1.jpg、2.jpg…（本機開啟或 GitHub 暫時讀不到時）
+    const list = [];
+    for (const dir of PHOTO_DIRS) {
+      for (let n = 1; n <= 99; n++) {
+        let hit = null;
+        for (const ext of ["jpg", "jpeg", "png", "webp"]) { hit = await loadImg(`${dir}/${n}.${ext}`); if (hit) break; }
+        if (!hit) break;
+        list.push(hit);
+      }
+      if (list.length) break;
+    }
+    if (!list.length && await loadImg("victory.jpg")) list.push("victory.jpg");
+    return list;
+  }
+
+  function paint(s, face) {
+    if (face.img) { s.textContent = ""; s.classList.add("photo"); s.style.backgroundImage = `url("${face.img}")`; }
+    else { s.classList.remove("photo"); s.style.backgroundImage = ""; s.textContent = face.text; }
+  }
+  function flipFace(el, face) {
+    const [top, bottom, leaf] = el.children;
+    const [front, back] = leaf.children;
+    const old = el._face || { text: el.dataset.value };
+    paint(top.firstChild, face);      // 後方：新畫面上半
+    paint(bottom.firstChild, old);    // 下方先保留舊畫面
+    paint(front.firstChild, old);     // 翻頁正面：舊畫面上半
+    paint(back.firstChild, face);     // 翻頁背面：新畫面下半
+    el._face = face;
+    el.dataset.value = "__photo";
+    document.body.classList.add("photo-on");
+    el.classList.remove("flipping"); void el.offsetWidth; el.classList.add("flipping");
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { paint(bottom.firstChild, face); el.classList.remove("flipping"); }, 650);
+  }
+
+  async function showPhoto() {
+    const list = await listPhotos();
+    if (!list.length) return;                       // 沒有照片就維持數字，不會壞掉
+    let i = 0;
+    const show = async () => {
+      const src = list[i % list.length];
+      if (await loadImg(src)) flipFace(els.d, { img: src });   // 先載好再翻，避免翻到空白
+      i++;
+    };
+    list.slice(1).forEach(loadImg);                 // 背景預先載入其他照片
+    setTimeout(show, 900);
+    if (list.length > 1) setTimeout(() => setInterval(show, PHOTO_INTERVAL * 1000), 900);
   }
 
   tick();
