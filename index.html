@@ -300,36 +300,50 @@
   const els = { d: $("d"), h: $("h"), m: $("m"), s: $("s") };
   Object.values(els).forEach(build);
 
-  let first = true, timer;
-  function tick() {
-    const diff = Math.max(0, TARGET - Date.now());
-    const t = Math.floor(diff / 1000);
-    const days = Math.floor(t / 86400);
-    const pad = n => String(n).padStart(2, "0");
+  // 開票時間（台灣時間）：投票日當天時分秒改為倒數到開票
+  const COUNT_TARGET = new Date("2026-11-28T16:00:00+08:00");
+  if (TEST_SEC > 0) COUNT_TARGET.setTime(TARGET.getTime() + 30 * 1000);   // 測試模式：歸零後 30 秒開票
 
-    els.d.classList.toggle("three", days >= 100);
-    setFlip(els.d, String(days), !first);
-    setFlip(els.h, pad(Math.floor(t % 86400 / 3600)), !first);
+  let first = true, timer, phase = 0;
+  const pad = n => String(n).padStart(2, "0");
+  function setHMS(ms) {
+    const t = Math.floor(Math.max(0, ms) / 1000);
+    setFlip(els.h, pad(Math.floor(t / 3600)), !first);
     setFlip(els.m, pad(Math.floor(t % 3600 / 60)), !first);
     setFlip(els.s, pad(t % 60), !first);
-    first = false;
+  }
+  function tick() {
+    const now = Date.now();
+    const diff = TARGET - now;
 
-    if (diff === 0) {
+    if (diff > 0) {                       // 投票日之前：倒數天數
+      const t = Math.floor(diff / 1000);
+      const days = Math.floor(t / 86400);
+      els.d.classList.toggle("three", days >= 100);
+      setFlip(els.d, String(days), !first);
+      setHMS(diff % 86400000);
+      first = false;
+      return;
+    }
+
+    if (phase === 0) {                    // 剛進入投票日：天數卡片翻成照片
+      phase = 1;
+      setFlip(els.d, "0", !first);
       document.body.classList.add("done");
-      const head = document.getElementById("headline");
-      const tag = document.getElementById("tagline");
-      if (Date.now() - TARGET < 86400000) {
-        head.innerHTML = '<span class="date">就是今天！</span><span class="tail">出門投票</span>';
-        tag.textContent = "帶好證件，回戶籍地投下你的一票";
-      } else {
-        head.innerHTML = '<span class="date">謝謝花蓮</span><span class="tail">每一票</span>';
-        tag.textContent = "謝謝每一位出門投票的鄉親";
-      }
-      clearInterval(timer);
       showPhoto();
     }
-  }
 
+    const countDiff = COUNT_TARGET - now;
+    if (countDiff > 0 && now - TARGET < 86400000) {   // 投票日當天、16:00 前：開票倒數
+      if (phase === 1) { phase = 2; $("headline").innerHTML = '<span class="date">下午4點</span><span class="tail">開票倒數</span>'; $("tagline").textContent = "帶好證件，回戶籍地投下你的一票"; }
+      setHMS(countDiff);
+    } else {                              // 16:00 之後：開票中
+      setHMS(0);
+      if (phase !== 3) { phase = 3; $("headline").innerHTML = '<span class="date">開票中</span><span class="tail">一起守護</span>'; $("tagline").textContent = "謝謝每一位出門投票的鄉親"; }
+      clearInterval(timer);
+    }
+    first = false;
+  }
 
   // ===== 投票日當天：天數卡片輪播照片 =====
   // 把照片放進 repo 的 photos 資料夾即可（檔名不限，依檔名排序播放）
